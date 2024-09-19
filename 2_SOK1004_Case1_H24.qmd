@@ -1,6 +1,6 @@
 ---
 title: "SOK-1004 H24 - Case 1"
-author: "Derek J. Clark"
+author: "Kandidat 2"
 format: html
 editor: visual
 ---
