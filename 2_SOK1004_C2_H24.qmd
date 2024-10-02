@@ -214,7 +214,9 @@ Positive (negative) value indicates net imports (export) of CO2 emissions.", col
 
 *\[Besvar oppgave III her\]*
 
-Figuren viser grafer som er over og under null. Det som er over og under nulllinjen er hvor mye co2 som er produsert i forhold til export/import. Vi ser at land som Kina som produserer mye co2, altså veldig mye co2 er under 0. Dette kommer av at varene som forbruker co2 for å bli laget blir i større grad eksportert ut av landet, de selger på en måte co2-en sin.
+Figuren viser grafer som er over og under null. Det som er over og under nulllinjen er hvor mye co2 som er produsert i forhold til export/import. Den viser også hvor mye landene har endret sitt co2 import og eksport over tid.
+
+Vi ser at land som Kina som produserer mye co2, altså veldig mye co2 er under 0. Dette kommer av at varene som forbruker co2 for å bli laget blir i større grad eksportert ut av landet, de selger på en måte co2-en sin.
 
 Derimot Japan og Tyskland er langt over 0. Dette kommer av at Tyskland og Japan importerer flere varer som bruker co2 enn de andre landene.
 
