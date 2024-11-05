@@ -1,0 +1,174 @@
+---
+title: "oppgave 3B oppdatert"
+Author: '2'
+format: pdf
+editor: visual
+---
+
+## Quarto
+
+I ett febrilsk forsøk på å gjøre Case 3 ferdig på jobb så mista æ oppgave 3, 'I got lost in the AI sauce'.
+
+Men har revidert den nå og mener denne er mer riktig, vurder selv om du vil ta den med i betrakning eller ikke, ville bare vise at æ kunne det.
+
+```{r}
+rm(list=ls()) 
+library(tidyverse)
+library(lubridate)
+library(rjstat)
+library(janitor)
+library(gdata)
+library(httr) 
+
+url <- "https://data.ssb.no/api/v0/no/table/03013/"
+
+query <- '{
+  "query": [
+    {
+      "code": "Konsumgrp",
+      "selection": {
+        "filter": "vs:CoiCop2016niva2",
+        "values": [
+          "01",
+          "02",
+          "03",
+          "04",
+          "05",
+          "06",
+          "07",
+          "08",
+          "09",
+          "10",
+          "11",
+          "12"
+        ]
+      }
+    },
+    {
+      "code": "ContentsCode",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "KpiIndMnd",
+          "KpiVektMnd"
+        ]
+      }
+    }
+  ],
+  "response": {
+    "format": "json-stat2"
+  }
+}'
+
+hent_indeks.tmp <- url %>%
+  POST(body = query, encode = "json")
+
+df <-  hent_indeks.tmp %>%
+  content("text") %>%
+  fromJSONstat() %>%
+  as_tibble()
+
+df <- df %>%
+separate(måned, 
+         into=c("year", "month"), 
+         sep="M") %>% #Stor M separerer år og måned
+mutate(dato = ymd(paste(year, month, "1"))) #mekker ny kolonne, ymd = Year, Month, Date
+
+# løs oppgave II her
+df_cols <- df %>%
+  #Slett dato, gruppe, variabel og verdi
+  #mutate( konsumgruppe = 'gruppe', statistikkvariabel = 'var', value = 'verdi')
+  names()#henter ut variabel navnene under datasettene.
+df_uniq <- df$konsumgruppe %>%
+  unique()#forteller hvor mange variabel navn som er i kolonnen. bruk hake parantes for å hente ut verdier. bruk filter((variabelnavn) == [kolonne nr.])
+df <- df %>%
+  select(-year, -month) %>% #bruk minus for å fjerne variabler
+  filter(dato >= as.Date('2011-01-01')) %>%
+  rename(gruppe = konsumgruppe, var = statistikkvariabel, verdi = value)
+
+var_navn <- df$var %>%
+  unique()
+
+gruppe_navn <- df$gruppe %>%
+  unique()
+
+df_vekter <- df %>%
+  filter(var %in% last(var_navn)) %>%
+  mutate(verdi = verdi/1000)
+df <- df %>%
+  filter(var %in% first(var_navn)) %>%
+  rbind(df_vekter)
+```
+
+Oppgave 3B
+
+```{r}
+# løs oppgave IIIb her
+
+# Definerer funksjon for å beregne totalindeksen
+beregn_totalindeks <- function(df) {
+  # Henter ut unike indeksnavn fra df$var
+  indeks_navn <- df$var %>% unique()
+
+  # Filtrerer df for å bare inkludere den første indeksen i indeks_navn
+  df_index <- df %>% filter(var %in% first(indeks_navn))
+
+  # Filtrerer df for å bare inkludere vektene
+  df_vekter <- df %>% filter(var == "Konsumprisindeks (vekter)")
+
+  # Sorterer df_index og df_vekter etter dato og gruppe
+  df_index <- df_index %>% arrange(dato, gruppe)
+  df_vekter <- df_vekter %>% arrange(dato, gruppe)
+
+  # Beregner totalindeksen ved å multiplisere verdiene fra df_index og df_vekter, 
+  # gruppere etter dato og summere verdiene. 
+  # Setter gruppe til 'KPI'
+  df_total <- df_index %>%
+    select(dato, gruppe) %>%
+    mutate(verdi = df_index$verdi * df_vekter$verdi) %>% 
+    group_by(dato) %>%
+    summarise(verdi = sum(verdi)) %>%
+    mutate(gruppe = 'KPI')
+
+  return(df_total)
+}
+
+# Definerer funksjon for å indeksere totalindeksen
+indekser_totalindeks <- function(df_total) {
+  # Indekserer totalindeksen med basisdato 2015-06-01
+  df_total <- df_total %>%
+    mutate(verdi = verdi * 100 / verdi[dato == as.Date('2015-06-01')])
+
+  return(df_total)
+}
+
+# Beregner totalindeksen
+df_total <- beregn_totalindeks(df)
+
+# Indekserer totalindeksen
+df_total <- indekser_totalindeks(df_total)
+
+# Lager et linjediagram av den indekserte totalindeksen
+df_total %>%
+  ggplot(aes(x=dato, y=verdi)) +
+  geom_line() +
+  theme_minimal()
+```
+
+-   **Sammenligne med fasit:** Dersom det finnes en fasit eller et eksempel på hvordan resultatet skal se ut, kan vi sammenligne vårt resultat med dette.
+
+<!-- -->
+
+-   **Sjekke dataene:** Vi kan se på dataene og manuelt beregne totalindeksen for noen datoer for å se om vi får samme resultat som koden.
+
+<!-- -->
+
+-   **Teste med kjente data:** Vi kan lage et lite eksempeldatasett med kjente verdier og kjøre koden på dette datasettet. Da vet vi hva resultatet skal bli, og vi kan enkelt sjekke om koden fungerer som den skal.
+
+<!-- -->
+
+-   **Visualisere resultatet:** Vi kan lage et plot av totalindeksen over tid. Dette kan hjelpe oss med å identifisere eventuelle feil eller uregelmessigheter i dataene.
+
+<!-- -->
+
+-   **Validere forutsetningene:** Vi kan sjekke om forutsetningene for beregningen er oppfylt. For eksempel, i formel 1 forutsettes det at vektene summerer seg til 1. Vi kan sjekke om dette stemmer for dataene våre.
